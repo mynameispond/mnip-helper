@@ -71,3 +71,54 @@ function fnConvertDataToArr($data)
     $arr = array_filter($arr);
     return $arr;
 }
+
+function TheBooGeyManEncodeIdx($string, $key = 'mynameispond')
+{
+    $j = 0;
+    $hash = null;
+    $key = sha1($key);
+    $strLen = strlen($string);
+    $keyLen = strlen($key);
+    for ($i = 0; $i < $strLen; ++$i) {
+        $ordStr = ord(substr($string, $i, 1));
+        if ($j == $keyLen) {
+            $j = 0;
+        }
+        $ordKey = ord(substr($key, $j, 1));
+        ++$j;
+        $hash .= strrev(base_convert(dechex($ordStr + $ordKey), 16, 36));
+    }
+    return $hash;
+}
+function TheBooGeyManDecodeIdx($string, $key = 'mynameispond')
+{
+    $j = 0;
+    $hash = null;
+    $key = sha1($key);
+    $strLen = strlen($string);
+    $keyLen = strlen($key);
+    for ($i = 0; $i < $strLen; $i += 2) {
+        $ordStr = hexdec(base_convert(strrev(substr($string, $i, 2)), 36, 16));
+        if ($j == $keyLen) {
+            $j = 0;
+        }
+        $ordKey = ord(substr($key, $j, 1));
+        ++$j;
+        $hash .= chr($ordStr - $ordKey);
+    }
+    return $hash;
+}
+
+function TheYeyoManEncrypt($text, $secret_key = 'mynameispond', $secret_iv = 'd&&9"dh4%:@')
+{
+    $key = hash('sha256', $secret_key);
+    $iv = substr(hash('sha256', $secret_iv), 0, 16);
+    return base64_encode(openssl_encrypt($text, "AES-256-CBC", $key, 0, $iv));
+}
+
+function TheYeyoManDecrypt($text, $secret_key = 'mynameispond', $secret_iv = 'd&&9"dh4%:@')
+{
+    $key = hash('sha256', $secret_key);
+    $iv = substr(hash('sha256', $secret_iv), 0, 16);
+    return openssl_decrypt(base64_decode($text), "AES-256-CBC", $key, 0, $iv);
+}
