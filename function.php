@@ -122,3 +122,13 @@ function TheYeyoManDecrypt($text, $secret_key = 'mynameispond', $secret_iv = 'd&
     $iv = substr(hash('sha256', $secret_iv), 0, 16);
     return openssl_decrypt(base64_decode($text), "AES-256-CBC", $key, 0, $iv);
 }
+
+function fnCompressString($string)
+{
+    return TheYeyoManEncrypt(bzcompress($string, 1), 'strcompress');
+}
+
+function fnDeCompressString($string)
+{
+    return bzdecompress(TheYeyoManDecrypt($string, 'strcompress'));
+}
