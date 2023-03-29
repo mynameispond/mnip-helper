@@ -59,3 +59,15 @@ function fnGetAction($except = '')
     }
     return http_build_query($get);
 }
+
+function fnConvertArrToData($arr)
+{
+    return '|' . (is_array($arr) ? implode('|', $arr) : $arr) . '|';
+}
+
+function fnConvertDataToArr($data)
+{
+    $arr = explode('|', $data);
+    $arr = array_filter($arr);
+    return $arr;
+}
