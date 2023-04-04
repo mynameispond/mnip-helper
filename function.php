@@ -27,7 +27,7 @@ function fnRemoveEscapeString($string)
         }
         return $string;
     } else {
-        return fnRemoveEscapeString($string);
+        return addslashes(trim($string));
     }
 }
 
