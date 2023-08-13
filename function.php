@@ -33,12 +33,12 @@ function fnRemoveEscapeString($string)
 
 function fnChkGet($name)
 {
-    return isset($_GET[$name]) ? fnRemoveEscapeString(trim($_GET[$name])) : '';
+    return isset($_GET[$name]) ? fnRemoveEscapeString($_GET[$name]) : '';
 }
 
 function fnChkPost($name)
 {
-    return isset($_POST[$name]) ? fnRemoveEscapeString(trim($_POST[$name])) : '';
+    return isset($_POST[$name]) ? fnRemoveEscapeString($_POST[$name]) : '';
 }
 
 function fnGetAction($except = '')
@@ -139,7 +139,7 @@ function fnDeCompressString($string)
 function in_array_stack($needle, $haystack, $strict = false)
 {
     foreach ($haystack as $item) {
-        if (($strict ? $item === $needle : $item == $needle) || (is_array($item) && in_array_r($needle, $item, $strict))) {
+        if (($strict ? $item === $needle : $item == $needle) || (is_array($item) && in_array_stack($needle, $item, $strict))) {
             return true;
         }
     }
