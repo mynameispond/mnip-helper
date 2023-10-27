@@ -191,3 +191,18 @@ function fnGetClientIp()
 		$ipaddress = 'UNKNOWN';
 	return $ipaddress;
 }
+
+function fn_calc_colmn(&$num)
+{
+	$mod = $num % 27;
+	if ($mod == 0) {
+		++$num;
+		$mod = $num % 27;
+	}
+	$stack = floor($num / 27);
+
+	$str = (empty($stack) ? '' : chr($stack + 64)) . chr($mod + 64);
+	// echo "<br>[$stack] [$mod] [$str]";
+	++$num;
+	return $str;
+}
