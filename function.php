@@ -192,8 +192,9 @@ function fnGetClientIp()
 	return $ipaddress;
 }
 
-function fn_calc_colmn(&$num)
+function fn_calc_colmn(&$num, $to = 0)
 {
+	$num += $to;
 	$mod = $num % 27;
 	if ($mod == 0) {
 		++$num;
