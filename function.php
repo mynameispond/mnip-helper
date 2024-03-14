@@ -195,16 +195,15 @@ function fnGetClientIp()
 function fn_calc_colmn(&$num, $to = 0)
 {
 	$num += $to;
-	$stack = floor($num / 27);
-	$mod = $num % 27;
-
+	$stack = floor($num / 26);
+	$mod = $num % 26;
+	if (empty($mod)) {
+		--$stack;
+		$mod = 26;
+	}
 	if (empty($stack)) {
 		$str = chr($mod + 64);
 	} else {
-		if ($mod == 0) {
-			++$num;
-		}
-		$mod = $num % 27;
 		$str = chr($stack + 64) . chr($mod + 64);
 	}
 	// echo "$num | $stack | $mod | $str";
