@@ -196,14 +196,14 @@ function fn_calc_colmn(&$num, $to = 0)
 {
 	$num += $to;
 	$mod = $num % 27;
-	if ($mod == 0) {
-		++$num;
-		$mod = $num % 27;
-	}
 	$stack = floor($num / 27);
 
-	$str = (empty($stack) ? '' : chr($stack + 64)) . chr($mod + 64);
-	// echo "<br>[$stack] [$mod] [$str]";
+	if (empty($stack)) {
+		$str = chr($mod + 64);
+	} else {
+		$str = chr($stack + 64) . chr($mod + 1 + 64);
+	}
+	// echo "[$stack] [$mod] ";
 	++$num;
 	return $str;
 }
