@@ -210,3 +210,27 @@ function fn_calc_colmn(&$num, $to = 0)
 	++$num;
 	return $str;
 }
+
+function blendChannels(float $alpha, int $channel1, int $channel2): int
+{
+	// blend 2 channels
+	return intval(($channel1 * $alpha) + ($channel2 * (1.0 - $alpha)));
+}
+
+function convertRGBAtoHEX6(string $rgba): string
+{
+	// sanitize
+	$rgba = strtolower(trim($rgba));
+	// check
+	if (substr($rgba, 0, 5) != 'rgba(') {
+		return $rgba;
+	}
+	// extract channels
+	$channels = explode(',', substr($rgba, 5, strpos($rgba, ')') - 5));
+	// compute rgb with white background
+	$alpha = $channels[3];
+	$r = blendChannels($alpha, $channels[0], 0xFF);
+	$g = blendChannels($alpha, $channels[1], 0xFF);
+	$b = blendChannels($alpha, $channels[2], 0xFF);
+	return sprintf('#%02x%02x%02x', $r, $g, $b);
+}
