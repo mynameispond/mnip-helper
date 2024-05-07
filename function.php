@@ -174,22 +174,24 @@ function fnWriteLogFile($text = '', $file_slug = '', $folder = 'logfile', $path 
 
 function fnGetClientIp()
 {
-	$ipaddress = '';
-	if (getenv('HTTP_CLIENT_IP'))
-		$ipaddress = getenv('HTTP_CLIENT_IP');
-	else if (getenv('HTTP_X_FORWARDED_FOR'))
-		$ipaddress = getenv('HTTP_X_FORWARDED_FOR');
-	else if (getenv('HTTP_X_FORWARDED'))
-		$ipaddress = getenv('HTTP_X_FORWARDED');
-	else if (getenv('HTTP_FORWARDED_FOR'))
-		$ipaddress = getenv('HTTP_FORWARDED_FOR');
-	else if (getenv('HTTP_FORWARDED'))
-		$ipaddress = getenv('HTTP_FORWARDED');
-	else if (getenv('REMOTE_ADDR'))
-		$ipaddress = getenv('REMOTE_ADDR');
-	else
-		$ipaddress = 'UNKNOWN';
-	return $ipaddress;
+	// Get real visitor IP behind CloudFlare network
+	if (isset($_SERVER["HTTP_CF_CONNECTING_IP"])) {
+		$_SERVER['REMOTE_ADDR'] = $_SERVER["HTTP_CF_CONNECTING_IP"];
+		$_SERVER['HTTP_CLIENT_IP'] = $_SERVER["HTTP_CF_CONNECTING_IP"];
+	}
+	$client  = @$_SERVER['HTTP_CLIENT_IP'];
+	$forward = @$_SERVER['HTTP_X_FORWARDED_FOR'];
+	$remote  = $_SERVER['REMOTE_ADDR'];
+
+	if (filter_var($client, FILTER_VALIDATE_IP)) {
+		$ip = $client;
+	} elseif (filter_var($forward, FILTER_VALIDATE_IP)) {
+		$ip = $forward;
+	} else {
+		$ip = $remote;
+	}
+
+	return $ip;
 }
 
 function fn_calc_colmn(&$num, $to = 0)
