@@ -196,6 +196,8 @@ function fnGetClientIp()
 
 function fn_calc_colmn(&$num, $to = 0)
 {
+	// generate excel column A-ZZ
+	// $num default start 1
 	$num += $to;
 	$stack = floor($num / 26);
 	$mod = $num % 26;
