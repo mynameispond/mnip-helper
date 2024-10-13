@@ -27,18 +27,18 @@ function fnRemoveEscapeString($string)
 		}
 		return $string;
 	} else {
-		return addslashes(strip_tags(trim($string)));
+		return addslashes(trim(strip_tags($string)));
 	}
 }
 
-function fnChkGet($name)
+function fnChkGet($name, $allow_all = false)
 {
-	return isset($_GET[$name]) ? fnRemoveEscapeString($_GET[$name]) : '';
+	return isset($_GET[$name]) ? ($allow_all === true ? $_GET[$name] : fnRemoveEscapeString($_GET[$name])) : '';
 }
 
-function fnChkPost($name)
+function fnChkPost($name, $allow_all = false)
 {
-	return isset($_POST[$name]) ? fnRemoveEscapeString($_POST[$name]) : '';
+	return isset($_POST[$name]) ? ($allow_all === true ? $_POST[$name] : fnRemoveEscapeString($_POST[$name])) : '';
 }
 
 function fnGetAction($except = '')
