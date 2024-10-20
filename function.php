@@ -174,24 +174,19 @@ function fnWriteLogFile($text = '', $file_slug = '', $folder = 'logfile', $path 
 
 function fnGetClientIp()
 {
-	// Get real visitor IP behind CloudFlare network
+	// Check for Cloudflare's CF-Connecting-IP header
 	if (isset($_SERVER["HTTP_CF_CONNECTING_IP"])) {
-		$_SERVER['REMOTE_ADDR'] = $_SERVER["HTTP_CF_CONNECTING_IP"];
-		$_SERVER['HTTP_CLIENT_IP'] = $_SERVER["HTTP_CF_CONNECTING_IP"];
-	}
-	$client  = @$_SERVER['HTTP_CLIENT_IP'];
-	$forward = @$_SERVER['HTTP_X_FORWARDED_FOR'];
-	$remote  = $_SERVER['REMOTE_ADDR'];
-
-	if (filter_var($client, FILTER_VALIDATE_IP)) {
-		$ip = $client;
-	} elseif (filter_var($forward, FILTER_VALIDATE_IP)) {
-		$ip = $forward;
-	} else {
-		$ip = $remote;
+		return $_SERVER["HTTP_CF_CONNECTING_IP"];
 	}
 
-	return $ip;
+	// Check for X-Forwarded-For header (can include multiple IPs, take the first one)
+	if (isset($_SERVER["HTTP_X_FORWARDED_FOR"])) {
+		$ipList = explode(',', $_SERVER["HTTP_X_FORWARDED_FOR"]);
+		return trim($ipList[0]);  // First IP in the list is the real client IP
+	}
+
+	// Default to REMOTE_ADDR if no proxy headers found
+	return $_SERVER["REMOTE_ADDR"];
 }
 
 function fn_calc_colmn(&$num, $to = 0)
