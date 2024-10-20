@@ -126,14 +126,25 @@ function TheYeyoManDecrypt($text, $secret_key = 'mynameispond', $secret_iv = 'd&
 	return openssl_decrypt(base64_decode($text), "AES-256-CBC", $key, 0, $iv);
 }
 
-function fnCompressString($string)
+function fnCompressString($string, $lib = 'b')
 {
-	return TheYeyoManEncrypt(bzcompress($string, 1), 'strcompress');
+	if ($lib == 'b') {
+		return TheYeyoManEncrypt(bzcompress($string, 1), 'strcompress');
+	} else {
+		return TheYeyoManEncrypt(gzcompress($string, 1), 'strcompress');
+	}
+
+	// ใช้ gzcompress ถ้าต้องการการบีบอัดที่รวดเร็วและมีประสิทธิภาพในสถานการณ์ที่ความเร็วเป็นสิ่งสำคัญ เช่น การบีบอัดข้อมูลที่ส่งผ่าน HTTP
+	// ใช้ bzcompress ถ้าต้องการบีบอัดข้อมูลให้มีขนาดเล็กที่สุด และไม่กังวลกับความเร็วในการบีบอัด
 }
 
-function fnDeCompressString($string)
+function fnDeCompressString($string, $lib = 'b')
 {
-	return bzdecompress(TheYeyoManDecrypt($string, 'strcompress'));
+	if ($lib == 'b') {
+		return bzdecompress(TheYeyoManDecrypt($string, 'strcompress'));
+	} else {
+		return gzuncompress(TheYeyoManDecrypt($string, 'strcompress'));
+	}
 }
 
 function in_array_stack($needle, $haystack, $strict = false)
