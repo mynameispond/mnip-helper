@@ -315,3 +315,51 @@ function is_image($path)
 	}
 	return false;
 }
+
+function fn_gen_idx($record_id, $table, $field_id, $field_idx, $slug = '', $length = 5, $ym = false)
+{
+	if ($ym === false) {
+		$ym = substr(date('Y') + 543, 2, 2);
+	}
+
+	$slug .= $ym;
+
+	$start_number0 = str_pad(0, $length, 0, STR_PAD_LEFT);
+	$start_number1 = str_pad(1, $length, 0, STR_PAD_LEFT);
+
+	$strSql = "
+		UPDATE {$table} 
+		SET {$field_idx}=(
+			SELECT 
+				IFNULL(new_id.idx, '{$slug}{$start_number1}') AS idx
+			FROM (
+				SELECT 
+				(
+						CASE 
+							WHEN tb1.{$field_idx} = '' THEN '{$slug}{$start_number1}'
+							WHEN tb1.{$field_idx} IS NULL THEN '{$slug}{$start_number1}'
+							ELSE (
+								CONCAT('{$slug}', RIGHT(CONCAT('{$start_number0}', RIGHT(tb1.{$field_idx},{$length}) + 1), {$length}))
+							) 
+						END
+				) as idx 
+				FROM {$table} as tb1 
+				WHERE tb1.{$field_idx} LIKE '{$slug}%' 
+				ORDER BY tb1.{$field_idx} DESC 
+				LIMIT 0,1
+			) as new_id 
+			RIGHT JOIN (
+				SELECT
+					1 AS dummy
+			) AS dummy_table ON 1 = 1
+		) 
+		WHERE {$field_id}={$record_id}
+	";
+
+	## LARAVEL ##
+	// DB::statement($strSql);
+
+	## WP ##
+	// global $wpdb;
+	// $wpdb->query($strSql);
+}
