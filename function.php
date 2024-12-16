@@ -363,3 +363,17 @@ function fn_gen_idx($record_id, $table, $field_id, $field_idx, $slug = '', $leng
 	// global $wpdb;
 	// $wpdb->query($strSql);
 }
+
+function replace_hyperlink_with_anchor($text)
+{
+	// Regular expression pattern to match URLs
+	$pattern = '/(https?:\/\/[^\s]+)/';
+
+	// Replacement pattern to wrap URLs with <a> tags
+	$replacement = '<a href="$1" target="_blank">$1</a>';
+
+	// Perform the replacement
+	$result = preg_replace($pattern, $replacement, $text);
+
+	return $result;
+}
