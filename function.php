@@ -169,18 +169,43 @@ function fnDeleteAllFileFolder($dir)
 	rmdir($dir);
 }
 
-function fnWriteLogFile($text = '', $file_slug = '', $folder = 'logfile', $path = '')
+function fnWriteLogFile($text = '', $path = '', $file = '')
 {
-	$file_name = empty($file_slug) ? date('Y-m') : $file_slug . '-' . date('Y-m');
+	if (empty($file)) {
+		$file = date('Y-m-d') . '.log';
+	}
 	if (empty($path)) {
 		$path = $_SERVER['DOCUMENT_ROOT'];
+	} else {
+		if (substr($path, -1) !== '/') {
+			$path .= '/';
+		}
 	}
-	$path .= '/' . $folder;
 	if (!file_exists($path)) {
 		mkdir($path, 0777, true);
 	}
-	$path .= '/' . $file_name . '.log';
-	file_put_contents($path, $text . PHP_EOL, FILE_APPEND);
+
+	$dateTime = date('Y-m-d H:i:s');
+	$fullUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+	$userIp = fnGetClientIp();
+	$userAgent = $_SERVER['HTTP_USER_AGENT'];
+	$getData = isset($_GET) ? $_GET : '';
+	$postData =  isset($_POST) ? $_POST : '';
+	$phpInput = file_get_contents('php://input');
+	$sessionData =  isset($_SESSION) ? $_SESSION : '';
+
+	$arr_text = [
+		'dateTime' => $dateTime,
+		'userIp' => $userIp,
+		'fullUrl' => $fullUrl,
+		'userAgent' => $userAgent,
+		'getData' => $getData,
+		'postData' => $postData,
+		'phpInput' => $phpInput,
+		'sessionData' => $sessionData,
+		'text' => $text,
+	];
+	file_put_contents($path . $file, json_encode($arr_text, JSON_UNESCAPED_UNICODE) . PHP_EOL, FILE_APPEND);
 }
 
 function fnGetClientIp()
