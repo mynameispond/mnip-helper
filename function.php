@@ -809,3 +809,25 @@ function check_thai_card_id($pid)
 		return false;
 	}
 }
+
+/**
+ * โหลดไฟล์ PHP ทั้งหมดจากพาธไดเรกทอรีที่กำหนด
+ * @param string $directory_path พาธของโฟลเดอร์ที่ต้องการโหลด
+ * @return void
+ */
+function include_all_php_in_dir(string $directory_path): void
+{
+	// ทำให้แน่ใจว่าพาธมี '/' อยู่ท้าย เพื่อการต่อสตริงที่ถูกต้อง
+	if (substr($directory_path, -1) !== '/') {
+		$directory_path .= '/';
+	}
+
+	// ค้นหาไฟล์ .php ทั้งหมดในไดเรกทอรีนั้น
+	$files = glob($directory_path . '*.php');
+
+	// วนซ้ำและโหลดไฟล์แต่ละไฟล์
+	foreach ($files as $file) {
+		// ใช้ include_once เพื่อป้องกันการโหลดซ้ำ
+		include_once $file;
+	}
+}
