@@ -1,41 +1,95 @@
 <?php
 
+<?php
+
 /**
- * สร้างสตริงสุ่มตามความยาวและประเภทที่กำหนด
+ * ประเภทของตัวอักษร:
+ * 1 = ตัวเลข (0-9)
+ * 2 = ตัวพิมพ์เล็ก (a-z โดยตัดตัวที่อ่านสับสนบางตัวออก)
+ * 3 = ตัวพิมพ์ใหญ่ (A-Z โดยตัดตัวที่อ่านสับสนบางตัวออก)
+ * 4 = อักขระพิเศษ
+ *
+ * ตัวอย่าง:
+ * fnGenerateRandomString(10)
+ * fnGenerateRandomString(12, [1, 2, 3])
+ * fnGenerateRandomString(16, [1, 2, 3, 4], '!@#$%')
  *
  * @param int $length ความยาวของสตริงที่ต้องการสร้าง
- * @param array $type (optional) ประเภทของตัวอักษรที่ต้องการใช้ (1 = ตัวเลข, 2 = ตัวพิมพ์เล็ก, 3 = ตัวพิมพ์ใหญ่) (ค่าเริ่มต้น: [1, 2, 3])
+ * @param array<int> $types ประเภทของตัวอักษรที่ต้องการใช้ ค่าเริ่มต้น: [1, 2, 3]
+ * @param string $specialChars ชุดอักขระพิเศษสำหรับ type 4
  * @return string สตริงสุ่มที่สร้างขึ้น
+ * @throws InvalidArgumentException กรณีความยาวไม่ถูกต้อง, types ว่าง, type ไม่ถูกต้อง,
+ *                                  หรือความยาวน้อยกว่าจำนวนกลุ่มที่เลือก
  */
-function fnGenerateRandomString(int $length, array $type = [1, 2, 3]): string
-{
-	// กำหนดสตริงของตัวอักษรตามประเภทที่กำหนด
-	$characters = '';
-	$types = [
-		1 => '1234567890',
+function fnGenerateRandomString(
+	int $length,
+	array $types = [1, 2, 3],
+	string $specialChars = '!@#$%^&*()-_=+[]{}'
+): string {
+	// ตรวจสอบว่าความยาวต้องมากกว่า 0
+	if ($length < 1) {
+		throw new InvalidArgumentException('$length must be greater than 0.');
+	}
+
+	// กำหนดชุดอักขระตามประเภท
+	$charSets = [
+		1 => '0123456789',
 		2 => 'abcdefghjkmnpqrstuvwxyz',
 		3 => 'ABCDEFGHJKLMNPQRSTUVWXYZ',
+		4 => $specialChars,
 	];
 
-	// วนลูปผ่านประเภทที่กำหนดและเพิ่มตัวอักษรลงใน $characters
-	foreach ($type as $t) {
-		if (isset($types[$t])) {
-			$characters .= $types[$t];
+	// ลบ type ที่ซ้ำกัน เช่น [1,1,2] จะเหลือ [1,2]
+	$types = array_values(array_unique($types));
+
+	// ต้องมีอย่างน้อย 1 type
+	if ($types === []) {
+		throw new InvalidArgumentException('$types cannot be empty.');
+	}
+
+	// ถ้าต้องการให้มีครบทุกกลุ่ม ความยาวต้องไม่น้อยกว่าจำนวนกลุ่ม
+	if ($length < count($types)) {
+		throw new InvalidArgumentException(
+			'$length must be at least the number of selected types.'
+		);
+	}
+
+	$allChars = '';
+	$resultChars = [];
+
+	// สุ่มอย่างน้อย 1 ตัวจากแต่ละกลุ่มที่เลือก
+	foreach ($types as $type) {
+		if (!array_key_exists($type, $charSets)) {
+			throw new InvalidArgumentException("Invalid type: {$type}");
 		}
+
+		$set = $charSets[$type];
+
+		if ($set === '') {
+			throw new InvalidArgumentException("Character set for type {$type} is empty.");
+		}
+
+		// ใส่อักขระจากกลุ่มนี้ 1 ตัว เพื่อบังคับให้มีครบทุกกลุ่ม
+		$resultChars[] = $set[random_int(0, strlen($set) - 1)];
+
+		// รวมชุดอักขระทั้งหมดไว้ใช้สุ่มตัวที่เหลือ
+		$allChars .= $set;
 	}
 
-	// คำนวณความยาวของสตริงตัวอักษร
-	$charactersLength = strlen($characters);
+	$allCharsLength = strlen($allChars);
 
-	// สร้างสตริงสุ่มตามความยาวที่กำหนด
-	$randomString = '';
-	for ($i = 0; $i < $length; $i++) {
-		// สุ่มตัวอักษรจาก $characters และเพิ่มลงใน $randomString
-		$randomString .= $characters[random_int(0, $charactersLength - 1)];
+	// เติมอักขระที่เหลือให้ครบตามความยาวที่ต้องการ
+	while (count($resultChars) < $length) {
+		$resultChars[] = $allChars[random_int(0, $allCharsLength - 1)];
 	}
 
-	// คืนค่าสตริงสุ่มที่สร้างขึ้น
-	return $randomString;
+	// สลับลำดับอักขระแบบ Fisher-Yates เพื่อไม่ให้ตัวที่บังคับไว้กระจุกอยู่ต้นสตริง
+	for ($i = count($resultChars) - 1; $i > 0; $i--) {
+		$j = random_int(0, $i);
+		[$resultChars[$i], $resultChars[$j]] = [$resultChars[$j], $resultChars[$i]];
+	}
+
+	return implode('', $resultChars);
 }
 
 /**
