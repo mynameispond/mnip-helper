@@ -1278,3 +1278,82 @@ if (!function_exists('esc_url_raw')) {
 		return _kwak_sanitize_url($url, $protocols);
 	}
 }
+
+function str_pagination($maxpage, $currentpage, $show_page = 5, $page_var = 'npage', $baseUrl = '')
+{
+	$maxpage     = max(0, (int) $maxpage);
+	$show_page   = max(1, (int) $show_page);
+	$currentpage = (int) $currentpage;
+
+	if ($maxpage <= 1) {
+		return '';
+	}
+
+	if ($currentpage < 1) {
+		$currentpage = 1;
+	} elseif ($currentpage > $maxpage) {
+		$currentpage = $maxpage;
+	}
+
+	$uqrget = fnGetAction($page_var);
+
+	if ($baseUrl === '') {
+		if (defined('APP_URL') && APP_URL !== '') {
+			$baseUrl = APP_URL;
+		} else {
+			$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+				|| ((int) ($_SERVER['SERVER_PORT'] ?? 0) === 443);
+
+			$scheme = $isHttps ? 'https://' : 'http://';
+			$host   = $_SERVER['HTTP_HOST'] ?? 'localhost';
+			$path   = strtok($_SERVER['REQUEST_URI'] ?? '/', '?');
+
+			$baseUrl = $scheme . $host . $path;
+		}
+	}
+
+	$separator     = (strpos($baseUrl, '?') === false) ? '?' : '&';
+	$paginationUrl = $baseUrl . $separator . (empty($uqrget) ? '' : $uqrget . '&') . $page_var . '=';
+
+	$span_page     = (int) floor($show_page / 2);
+	$start_page_at = max(1, $currentpage - $span_page);
+	$max_page_end  = min($maxpage, $start_page_at + $show_page - 1);
+	$start_page_at = max(1, $max_page_end - $show_page + 1);
+
+	$buildItem = function ($label, $page = null, $active = false, $disabled = false, $allowHtmlLabel = false) use ($paginationUrl) {
+		$classes = ['page-item'];
+
+		if ($active) {
+			$classes[] = 'active';
+		}
+
+		if ($disabled) {
+			$classes[] = 'disabled';
+		}
+
+		$classAttr = esc_attr(implode(' ', $classes));
+		$labelHtml = $allowHtmlLabel ? (string) $label : esc_html((string) $label);
+
+		if ($disabled || $active || $page === null) {
+			return '<li class="' . $classAttr . '"><span class="page-link">' . $labelHtml . '</span></li>';
+		}
+
+		$url = esc_url($paginationUrl . (int) $page);
+
+		return '<li class="' . $classAttr . '"><a class="page-link" href="' . $url . '">' . $labelHtml . '</a></li>';
+	};
+
+	$str  = "<nav aria-label='Pagination'><ul class='pagination justify-content-end mb-0'>";
+	$str .= $buildItem("<span aria-hidden='true'>&laquo;</span>", 1, false, $currentpage <= 1, true);
+	$str .= $buildItem('Previous', $currentpage - 1, false, $currentpage <= 1);
+
+	for ($i = $start_page_at; $i <= $max_page_end; $i++) {
+		$str .= $buildItem((string) $i, $i, $currentpage === $i, false);
+	}
+
+	$str .= $buildItem('Next', $currentpage + 1, false, $currentpage >= $maxpage);
+	$str .= $buildItem("<span aria-hidden='true'>&raquo;</span>", $maxpage, false, $currentpage >= $maxpage, true);
+	$str .= '</ul></nav>';
+
+	return $str;
+}
