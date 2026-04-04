@@ -562,7 +562,7 @@ function fnDeleteAllFileFolder(string $dir): void
  * เขียนข้อมูลลงไฟล์ log ในรูปแบบ JSON
  *
  * @param string $text ข้อความที่จะเขียนลง log (ค่าเริ่มต้น: '')
- * @param string|null $path path ของ directory ที่จะเก็บไฟล์ log (ค่าเริ่มต้น: DOCUMENT_ROOT/secure/logs/)
+ * @param string|null $path path ของ directory ที่จะเก็บไฟล์ log (ค่าเริ่มต้น: DOCUMENT_ROOT/secure/log/)
  * @param string|null $file ชื่อไฟล์ log (ค่าเริ่มต้น: วันที่ปัจจุบัน.log)
  * @return void
  */
@@ -571,8 +571,8 @@ function fnWriteLogFile(string $text = '', ?string $path = null, ?string $file =
 	// กำหนดชื่อไฟล์ log ถ้า $file เป็น null จะใช้ชื่อไฟล์ตามวันที่ปัจจุบัน
 	$file = $file ?? date('Y-m-d') . '.log';
 
-	// กำหนด path ของไฟล์ log ถ้า $path เป็น null จะใช้ DOCUMENT_ROOT/secure/logs/
-	$path = $path ?? $_SERVER['DOCUMENT_ROOT'] . '/secure/logs/';
+	// กำหนด path ของไฟล์ log ถ้า $path เป็น null จะใช้ DOCUMENT_ROOT/secure/log/
+	$path = $path ?? $_SERVER['DOCUMENT_ROOT'] . '/secure/log/';
 
 	// ตรวจสอบว่า path ลงท้ายด้วย '/' หรือไม่ ถ้าไม่ลงท้ายให้เพิ่ม '/'
 	if (substr($path, -1) !== '/') {
