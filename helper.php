@@ -1,37 +1,26 @@
 <?php
 
-<?php
+function fn_pre($arr)
+{
+	$str = '<pre>';
+	$str .= print_r($arr, true);
+	$str .= '</pre>';
+	return $str;
+}
 
 /**
- * ประเภทของตัวอักษร:
- * 1 = ตัวเลข (0-9)
- * 2 = ตัวพิมพ์เล็ก (a-z โดยตัดตัวที่อ่านสับสนบางตัวออก)
- * 3 = ตัวพิมพ์ใหญ่ (A-Z โดยตัดตัวที่อ่านสับสนบางตัวออก)
- * 4 = อักขระพิเศษ
- *
- * ตัวอย่าง:
- * fnGenerateRandomString(10)
- * fnGenerateRandomString(12, [1, 2, 3])
- * fnGenerateRandomString(16, [1, 2, 3, 4], '!@#$%')
+ * สร้างสตริงสุ่มตามความยาวและประเภทที่กำหนด
  *
  * @param int $length ความยาวของสตริงที่ต้องการสร้าง
- * @param array<int> $types ประเภทของตัวอักษรที่ต้องการใช้ ค่าเริ่มต้น: [1, 2, 3]
- * @param string $specialChars ชุดอักขระพิเศษสำหรับ type 4
+ * @param array $type (optional) ประเภทของตัวอักษรที่ต้องการใช้ (1 = ตัวเลข, 2 = ตัวพิมพ์เล็ก, 3 = ตัวพิมพ์ใหญ่) (ค่าเริ่มต้น: [1, 2, 3])
  * @return string สตริงสุ่มที่สร้างขึ้น
- * @throws InvalidArgumentException กรณีความยาวไม่ถูกต้อง, types ว่าง, type ไม่ถูกต้อง,
- *                                  หรือความยาวน้อยกว่าจำนวนกลุ่มที่เลือก
  */
-function fnGenerateRandomString(
-	int $length,
-	array $types = [1, 2, 3],
-	string $specialChars = '!@#$%^&*()-_=+[]{}'
-): string {
-	// ตรวจสอบว่าความยาวต้องมากกว่า 0
+function fnGenerateRandomString(int $length, array $types = [1, 2, 3], string $specialChars = '!@#$%^&*()-_=+[]{}'): string
+{
 	if ($length < 1) {
 		throw new InvalidArgumentException('$length must be greater than 0.');
 	}
 
-	// กำหนดชุดอักขระตามประเภท
 	$charSets = [
 		1 => '0123456789',
 		2 => 'abcdefghjkmnpqrstuvwxyz',
@@ -39,15 +28,12 @@ function fnGenerateRandomString(
 		4 => $specialChars,
 	];
 
-	// ลบ type ที่ซ้ำกัน เช่น [1,1,2] จะเหลือ [1,2]
 	$types = array_values(array_unique($types));
 
-	// ต้องมีอย่างน้อย 1 type
 	if ($types === []) {
 		throw new InvalidArgumentException('$types cannot be empty.');
 	}
 
-	// ถ้าต้องการให้มีครบทุกกลุ่ม ความยาวต้องไม่น้อยกว่าจำนวนกลุ่ม
 	if ($length < count($types)) {
 		throw new InvalidArgumentException(
 			'$length must be at least the number of selected types.'
@@ -57,7 +43,6 @@ function fnGenerateRandomString(
 	$allChars = '';
 	$resultChars = [];
 
-	// สุ่มอย่างน้อย 1 ตัวจากแต่ละกลุ่มที่เลือก
 	foreach ($types as $type) {
 		if (!array_key_exists($type, $charSets)) {
 			throw new InvalidArgumentException("Invalid type: {$type}");
@@ -69,21 +54,21 @@ function fnGenerateRandomString(
 			throw new InvalidArgumentException("Character set for type {$type} is empty.");
 		}
 
-		// ใส่อักขระจากกลุ่มนี้ 1 ตัว เพื่อบังคับให้มีครบทุกกลุ่ม
+		// บังคับให้มีอย่างน้อย 1 ตัวจากแต่ละกลุ่มที่เลือก
 		$resultChars[] = $set[random_int(0, strlen($set) - 1)];
 
-		// รวมชุดอักขระทั้งหมดไว้ใช้สุ่มตัวที่เหลือ
+		// รวมทุกชุดไว้สำหรับสุ่มตัวที่เหลือ
 		$allChars .= $set;
 	}
 
 	$allCharsLength = strlen($allChars);
 
-	// เติมอักขระที่เหลือให้ครบตามความยาวที่ต้องการ
+	// เติมตัวที่เหลือ
 	while (count($resultChars) < $length) {
 		$resultChars[] = $allChars[random_int(0, $allCharsLength - 1)];
 	}
 
-	// สลับลำดับอักขระแบบ Fisher-Yates เพื่อไม่ให้ตัวที่บังคับไว้กระจุกอยู่ต้นสตริง
+	// สลับตำแหน่งแบบ Fisher-Yates โดยใช้ random_int
 	for ($i = count($resultChars) - 1; $i > 0; $i--) {
 		$j = random_int(0, $i);
 		[$resultChars[$i], $resultChars[$j]] = [$resultChars[$j], $resultChars[$i]];
@@ -302,25 +287,218 @@ function TheYeyoManDecrypt(string $text, string $secret_key = 'mynameispond', st
 	return openssl_decrypt(base64_decode($text), "AES-256-CBC", $key, 0, $iv);
 }
 
-function fnCompressString($string, $lib = 'b')
+/**
+ * เข้ารหัสข้อความแบบปลอดภัย โดยใช้ AES-256-GCM
+ *
+ * จุดเด่น:
+ * - ใช้ IV แบบสุ่มทุกครั้ง
+ * - ใช้ salt แบบสุ่มทุกครั้ง
+ * - ใช้ HKDF แปลง secret key ให้เหมาะกับ AES-256
+ * - มี authentication tag ป้องกันข้อมูลถูกแก้ไข
+ *
+ * @param string $text ข้อความที่ต้องการเข้ารหัส
+ * @param string $secret_key คีย์ลับสำหรับเข้ารหัส/ถอดรหัส
+ * @return string ข้อมูลที่เข้ารหัสแล้วในรูปแบบ Base64URL
+ */
+function TheKwakEncrypt(string $text, string $secret_key = 'mynameispond'): string
 {
-	if ($lib == 'b') {
-		return TheYeyoManEncrypt(bzcompress($string, 1), 'strcompress');
-	} else {
-		return TheYeyoManEncrypt(gzcompress($string, 1), 'strcompress');
+	$cipher = 'aes-256-gcm';
+	$ivLength = openssl_cipher_iv_length($cipher);
+
+	if ($ivLength === false) {
+		throw new RuntimeException('Unsupported cipher.');
 	}
 
-	// ใช้ gzcompress ถ้าต้องการการบีบอัดที่รวดเร็วและมีประสิทธิภาพในสถานการณ์ที่ความเร็วเป็นสิ่งสำคัญ เช่น การบีบอัดข้อมูลที่ส่งผ่าน HTTP
-	// ใช้ bzcompress ถ้าต้องการบีบอัดข้อมูลให้มีขนาดเล็กที่สุด และไม่กังวลกับความเร็วในการบีบอัด
+	$salt = random_bytes(16);
+	$iv = random_bytes($ivLength);
+
+	$key = hash_hkdf('sha256', $secret_key, 32, 'TheKwakEncrypt', $salt);
+
+	$tag = '';
+	$cipherText = openssl_encrypt(
+		$text,
+		$cipher,
+		$key,
+		OPENSSL_RAW_DATA,
+		$iv,
+		$tag,
+		'',
+		16
+	);
+
+	if ($cipherText === false) {
+		throw new RuntimeException('Encryption failed.');
+	}
+
+	// payload = version(1 byte) + salt(16) + iv + tag(16) + ciphertext
+	$payload = chr(1) . $salt . $iv . $tag . $cipherText;
+
+	return rtrim(strtr(base64_encode($payload), '+/', '-_'), '=');
 }
 
-function fnDeCompressString($string, $lib = 'b')
+/**
+ * ถอดรหัสข้อความที่เข้ารหัสด้วย TheKwakEncrypt()
+ *
+ * @param string $encryptedText ข้อความที่ถูกเข้ารหัสในรูปแบบ Base64URL
+ * @param string $secret_key คีย์ลับสำหรับถอดรหัส
+ * @return string|false คืนข้อความต้นฉบับ หรือ false หากถอดรหัสไม่สำเร็จ
+ */
+function TheKwakDecrypt(string $encryptedText, string $secret_key = 'mynameispond'): string|false
 {
-	if ($lib == 'b') {
-		return bzdecompress(TheYeyoManDecrypt($string, 'strcompress'));
-	} else {
-		return gzuncompress(TheYeyoManDecrypt($string, 'strcompress'));
+	$cipher = 'aes-256-gcm';
+	$ivLength = openssl_cipher_iv_length($cipher);
+
+	if ($ivLength === false) {
+		return false;
 	}
+
+	$normalized = strtr($encryptedText, '-_', '+/');
+	$padding = strlen($normalized) % 4;
+	if ($padding > 0) {
+		$normalized .= str_repeat('=', 4 - $padding);
+	}
+
+	$decoded = base64_decode($normalized, true);
+	if ($decoded === false) {
+		return false;
+	}
+
+	$versionLength = 1;
+	$saltLength = 16;
+	$tagLength = 16;
+	$minLength = $versionLength + $saltLength + $ivLength + $tagLength + 1;
+
+	if (strlen($decoded) < $minLength) {
+		return false;
+	}
+
+	$offset = 0;
+
+	$version = ord(substr($decoded, $offset, $versionLength));
+	$offset += $versionLength;
+
+	if ($version !== 1) {
+		return false;
+	}
+
+	$salt = substr($decoded, $offset, $saltLength);
+	$offset += $saltLength;
+
+	$iv = substr($decoded, $offset, $ivLength);
+	$offset += $ivLength;
+
+	$tag = substr($decoded, $offset, $tagLength);
+	$offset += $tagLength;
+
+	$cipherText = substr($decoded, $offset);
+
+	$key = hash_hkdf('sha256', $secret_key, 32, 'TheKwakEncrypt', $salt);
+
+	return openssl_decrypt(
+		$cipherText,
+		$cipher,
+		$key,
+		OPENSSL_RAW_DATA,
+		$iv,
+		$tag
+	);
+}
+
+/**
+ * บีบอัด string แล้วคืนค่าเป็น Base64URL string
+ *
+ * @param string $string ข้อความที่ต้องการบีบอัด
+ * @param string $lib ไลบรารีที่ใช้: g = gzcompress, b = bzcompress
+ * @param int $level ระดับการบีบอัด
+ * @return string
+ */
+function fnCompressString(string $string, string $lib = 'g', int $level = 9): string
+{
+	$lib = strtolower($lib);
+
+	if ($lib === 'b') {
+		if (!function_exists('bzcompress')) {
+			throw new RuntimeException('bzcompress() is not available on this server.');
+		}
+
+		if ($level < 1 || $level > 9) {
+			throw new InvalidArgumentException('Bzip2 level must be between 1 and 9.');
+		}
+
+		$compressed = bzcompress($string, $level);
+
+		if (!is_string($compressed)) {
+			throw new RuntimeException('Bzip2 compression failed. Error code: ' . $compressed);
+		}
+
+		$header = 'B1';
+	} else {
+		if (!function_exists('gzcompress')) {
+			throw new RuntimeException('gzcompress() is not available on this server.');
+		}
+
+		if ($level < -1 || $level > 9) {
+			throw new InvalidArgumentException('Gzip level must be between -1 and 9.');
+		}
+
+		$compressed = gzcompress($string, $level);
+
+		if ($compressed === false) {
+			throw new RuntimeException('Gzip compression failed.');
+		}
+
+		$header = 'G1';
+	}
+
+	$payload = $header . $compressed;
+
+	// Base64URL
+	return rtrim(strtr(base64_encode($payload), '+/', '-_'), '=');
+}
+
+/**
+ * คลายข้อมูลที่ได้จาก fnCompressString()
+ *
+ * @param string $string Base64URL string
+ * @return string|false
+ */
+function fnDecompressString(string $string): string|false
+{
+	$normalized = strtr($string, '-_', '+/');
+	$padding = strlen($normalized) % 4;
+
+	if ($padding > 0) {
+		$normalized .= str_repeat('=', 4 - $padding);
+	}
+
+	$decoded = base64_decode($normalized, true);
+
+	if ($decoded === false || strlen($decoded) < 3) {
+		return false;
+	}
+
+	$header = substr($decoded, 0, 2);
+	$data = substr($decoded, 2);
+
+	if ($header === 'G1') {
+		if (!function_exists('gzuncompress')) {
+			return false;
+		}
+
+		return gzuncompress($data);
+	}
+
+	if ($header === 'B1') {
+		if (!function_exists('bzdecompress')) {
+			return false;
+		}
+
+		$result = bzdecompress($data);
+
+		return is_string($result) ? $result : false;
+	}
+
+	return false;
 }
 
 /**
@@ -883,5 +1061,220 @@ function include_all_php_in_dir(string $directory_path): void
 	foreach ($files as $file) {
 		// ใช้ include_once เพื่อป้องกันการโหลดซ้ำ
 		include_once $file;
+	}
+}
+
+if (!function_exists('esc_html')) {
+	/**
+	 * Escape ข้อความสำหรับแสดงใน HTML ปกติ
+	 *
+	 * @param string|null $text
+	 * @return string
+	 */
+	function esc_html(?string $text): string
+	{
+		return htmlspecialchars((string) $text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+	}
+}
+
+if (!function_exists('esc_attr')) {
+	/**
+	 * Escape ข้อความสำหรับใช้ใน HTML attribute
+	 *
+	 * @param string|null $text
+	 * @return string
+	 */
+	function esc_attr(?string $text): string
+	{
+		return htmlspecialchars((string) $text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+	}
+}
+
+if (!function_exists('esc_textarea')) {
+	/**
+	 * Escape ข้อความสำหรับใช้ใน textarea
+	 *
+	 * @param string|null $text
+	 * @return string
+	 */
+	function esc_textarea(?string $text): string
+	{
+		return htmlspecialchars((string) $text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+	}
+}
+
+if (!function_exists('wp_allowed_protocols')) {
+	/**
+	 * รายการ protocol ที่อนุญาตแบบใกล้เคียง WordPress
+	 *
+	 * @return array
+	 */
+	function wp_allowed_protocols(): array
+	{
+		return [
+			'http',
+			'https',
+			'ftp',
+			'ftps',
+			'mailto',
+			'news',
+			'irc',
+			'gopher',
+			'nntp',
+			'feed',
+			'telnet',
+			'tel',
+		];
+	}
+}
+
+if (!function_exists('_kwak_deep_replace')) {
+	/**
+	 * ลบข้อความซ้ำๆ จนกว่าจะไม่เหลือ
+	 *
+	 * @param array $search
+	 * @param string $subject
+	 * @return string
+	 */
+	function _kwak_deep_replace(array $search, string $subject): string
+	{
+		do {
+			$before = $subject;
+			$subject = str_ireplace($search, '', $subject);
+		} while ($before !== $subject);
+
+		return $subject;
+	}
+}
+
+if (!function_exists('_kwak_is_relative_url')) {
+	/**
+	 * ตรวจว่าเป็น relative URL หรือไม่
+	 *
+	 * @param string $url
+	 * @return bool
+	 */
+	function _kwak_is_relative_url(string $url): bool
+	{
+		return $url !== '' && in_array($url[0], ['/', '#', '?'], true);
+	}
+}
+
+if (!function_exists('_kwak_get_url_scheme')) {
+	/**
+	 * ดึง scheme จาก URL ถ้ามี
+	 *
+	 * @param string $url
+	 * @return string|null
+	 */
+	function _kwak_get_url_scheme(string $url): ?string
+	{
+		if (preg_match('/^([a-z][a-z0-9+\-.]*):/i', $url, $matches)) {
+			return strtolower($matches[1]);
+		}
+
+		return null;
+	}
+}
+
+if (!function_exists('_kwak_sanitize_url')) {
+	/**
+	 * ทำความสะอาด URL แบบไม่แปลง entity สำหรับแสดงผล
+	 *
+	 * @param string|null $url
+	 * @param array|null $protocols
+	 * @return string
+	 */
+	function _kwak_sanitize_url(?string $url, ?array $protocols = null): string
+	{
+		$url = (string) $url;
+
+		if ($url === '') {
+			return '';
+		}
+
+		$url = ltrim($url);
+		$url = str_replace(' ', '%20', $url);
+
+		// ลบอักขระที่ไม่เหมาะกับ URL ออก
+		$url = preg_replace("|[^a-z0-9-~+_.?#=!&;,/:%@$\|*'()\[\]\x80-\xff]|i", '', $url);
+		if ($url === null || $url === '') {
+			return '';
+		}
+
+		// กัน CRLF injection สำหรับ URL ทั่วไป ยกเว้น mailto:
+		if (stripos($url, 'mailto:') !== 0) {
+			$url = _kwak_deep_replace(['%0d', '%0a', '%0D', '%0A', "\r", "\n"], $url);
+		}
+
+		// แก้ :// ที่เพี้ยน
+		$url = str_replace(';//', '://', $url);
+
+		// ถ้าไม่ใช่ relative URL, ไม่ใช่ protocol-relative URL, ไม่มี scheme, และไม่ใช่ไฟล์ php
+		// ให้เติม http:// หรือ protocol ตัวแรกที่กำหนด
+		if (
+			!str_contains($url, ':')
+			&& !_kwak_is_relative_url($url)
+			&& !str_starts_with($url, '//')
+			&& !preg_match('/^[a-z0-9-]+?\.php/i', $url)
+		) {
+			$allowed = is_array($protocols) && $protocols !== [] ? array_values($protocols) : wp_allowed_protocols();
+			$defaultScheme = (isset($allowed[0]) && strtolower((string) $allowed[0]) === 'https') ? 'https://' : 'http://';
+			$url = $defaultScheme . $url;
+		}
+
+		// relative URL และ protocol-relative URL อนุญาต
+		if (_kwak_is_relative_url($url) || str_starts_with($url, '//')) {
+			return $url;
+		}
+
+		$protocols = $protocols ?: wp_allowed_protocols();
+		$protocols = array_map(static fn($item) => strtolower((string) $item), $protocols);
+
+		$scheme = _kwak_get_url_scheme($url);
+
+		if ($scheme !== null && !in_array($scheme, $protocols, true)) {
+			return '';
+		}
+
+		return $url;
+	}
+}
+
+if (!function_exists('esc_url')) {
+	/**
+	 * Escape URL สำหรับแสดงผลใน HTML
+	 *
+	 * @param string|null $url
+	 * @param array|null $protocols
+	 * @return string
+	 */
+	function esc_url(?string $url, ?array $protocols = null): string
+	{
+		$url = _kwak_sanitize_url($url, $protocols);
+
+		if ($url === '') {
+			return '';
+		}
+
+		// แปลงให้เหมาะกับการแสดงผลใน HTML
+		$url = htmlspecialchars($url, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+		$url = str_replace('&amp;', '&#038;', $url);
+
+		return $url;
+	}
+}
+
+if (!function_exists('esc_url_raw')) {
+	/**
+	 * ทำความสะอาด URL สำหรับเก็บลง DB หรือใช้ redirect
+	 *
+	 * @param string|null $url
+	 * @param array|null $protocols
+	 * @return string
+	 */
+	function esc_url_raw(?string $url, ?array $protocols = null): string
+	{
+		return _kwak_sanitize_url($url, $protocols);
 	}
 }
