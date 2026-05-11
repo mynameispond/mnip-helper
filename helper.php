@@ -300,7 +300,7 @@ function TheYeyoManDecrypt(string $text, string $secret_key = 'mynameispond', st
  * @param string $secret_key คีย์ลับสำหรับเข้ารหัส/ถอดรหัส
  * @return string ข้อมูลที่เข้ารหัสแล้วในรูปแบบ Base64URL
  */
-function TheKwakEncrypt(string $text, string $secret_key = 'mynameispond'): string
+function TheSigmaBoyEncrypt(string $text, string $secret_key = 'mynameispond'): string
 {
 	$cipher = 'aes-256-gcm';
 	$ivLength = openssl_cipher_iv_length($cipher);
@@ -312,7 +312,7 @@ function TheKwakEncrypt(string $text, string $secret_key = 'mynameispond'): stri
 	$salt = random_bytes(16);
 	$iv = random_bytes($ivLength);
 
-	$key = hash_hkdf('sha256', $secret_key, 32, 'TheKwakEncrypt', $salt);
+	$key = hash_hkdf('sha256', $secret_key, 32, 'TheSigmaBoyEncrypt', $salt);
 
 	$tag = '';
 	$cipherText = openssl_encrypt(
@@ -337,13 +337,13 @@ function TheKwakEncrypt(string $text, string $secret_key = 'mynameispond'): stri
 }
 
 /**
- * ถอดรหัสข้อความที่เข้ารหัสด้วย TheKwakEncrypt()
+ * ถอดรหัสข้อความที่เข้ารหัสด้วย TheSigmaBoyEncrypt()
  *
  * @param string $encryptedText ข้อความที่ถูกเข้ารหัสในรูปแบบ Base64URL
  * @param string $secret_key คีย์ลับสำหรับถอดรหัส
  * @return string|false คืนข้อความต้นฉบับ หรือ false หากถอดรหัสไม่สำเร็จ
  */
-function TheKwakDecrypt(string $encryptedText, string $secret_key = 'mynameispond'): string|false
+function TheSigmaBoyDecrypt(string $encryptedText, string $secret_key = 'mynameispond'): string|false
 {
 	$cipher = 'aes-256-gcm';
 	$ivLength = openssl_cipher_iv_length($cipher);
@@ -392,7 +392,7 @@ function TheKwakDecrypt(string $encryptedText, string $secret_key = 'mynameispon
 
 	$cipherText = substr($decoded, $offset);
 
-	$key = hash_hkdf('sha256', $secret_key, 32, 'TheKwakEncrypt', $salt);
+	$key = hash_hkdf('sha256', $secret_key, 32, 'TheSigmaBoyEncrypt', $salt);
 
 	return openssl_decrypt(
 		$cipherText,
