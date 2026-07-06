@@ -566,7 +566,7 @@ function fnDeleteAllFileFolder(string $dir): void
  * เขียนข้อมูลลงไฟล์ log ในรูปแบบ JSON
  *
  * @param string $text ข้อความที่จะเขียนลง log (ค่าเริ่มต้น: '')
- * @param string|null $path path ของ directory ที่จะเก็บไฟล์ log (ค่าเริ่มต้น: DOCUMENT_ROOT/secure/log/)
+ * @param string|null $path path ของ directory ที่จะเก็บไฟล์ log (ค่าเริ่มต้น: DOCUMENT_ROOT/storage/logs/)
  * @param string|null $file ชื่อไฟล์ log (ค่าเริ่มต้น: วันที่ปัจจุบัน.log)
  * @return void
  */
@@ -575,8 +575,8 @@ function fnWriteLogFile(string $text = '', ?string $path = null, ?string $file =
 	// กำหนดชื่อไฟล์ log ถ้า $file เป็น null จะใช้ชื่อไฟล์ตามวันที่ปัจจุบัน
 	$file = $file ?? date('Y-m-d') . '.log';
 
-	// กำหนด path ของไฟล์ log ถ้า $path เป็น null จะใช้ DOCUMENT_ROOT/secure/log/
-	$path = $path ?? $_SERVER['DOCUMENT_ROOT'] . '/secure/log/';
+	// กำหนด path ของไฟล์ log ถ้า $path เป็น null จะใช้ DOCUMENT_ROOT/storage/logs/
+	$path = $path ?? $_SERVER['DOCUMENT_ROOT'] . '/storage/logs/';
 
 	// ตรวจสอบว่า path ลงท้ายด้วย '/' หรือไม่ ถ้าไม่ลงท้ายให้เพิ่ม '/'
 	if (substr($path, -1) !== '/') {
@@ -586,6 +586,11 @@ function fnWriteLogFile(string $text = '', ?string $path = null, ?string $file =
 	// ตรวจสอบว่า path มีอยู่หรือไม่ ถ้าไม่มีสร้าง directory ขึ้นมา
 	if (!file_exists($path)) {
 		mkdir($path, 0777, true);
+	}
+
+	// สร้างไฟล์ .htaccess เพื่อป้องกันการเข้าถึงจากภายนอก
+	if (file_exists($path) && !file_exists($path . '.htaccess')) {
+		file_put_contents($path . '.htaccess', 'Deny from all');
 	}
 
 	// กำหนดวันที่และเวลาปัจจุบัน
@@ -994,14 +999,15 @@ function replace_hyperlink_with_anchor(string $text): string
 	// [^\s]+: จับคู่อักขระที่ไม่ใช่ช่องว่างตั้งแต่ 1 ตัวขึ้นไป
 	$pattern = '/(https?:\/\/[^\s]+)/';
 
-	// กำหนดรูปแบบการแทนที่ โดยห่อ URL ด้วยแท็ก <a>
-	// href="$1": กำหนด URL เป็นค่าของ attribute href
-	// target="_blank": เปิดลิงก์ในแท็บใหม่
-	// $1: แทนที่ด้วย URL ที่ถูกจับคู่
-	$replacement = '<a href="$1" target="_blank">$1</a>';
-
-	// ทำการแทนที่ URL ในข้อความด้วยแท็ก <a>
-	$result = preg_replace($pattern, $replacement, $text);
+	// ทำการแทนที่ URL ในข้อความด้วยแท็ก <a> ที่ปลอดภัยโดยใช้ callback
+	$result = preg_replace_callback($pattern, function (array $matches): string {
+		$url = $matches[1];
+		$safe_url = esc_url($url);
+		if ($safe_url === '') {
+			return esc_html($url);
+		}
+		return '<a href="' . $safe_url . '" target="_blank">' . esc_html($url) . '</a>';
+	}, $text);
 
 	// คืนค่าข้อความที่ผ่านการแทนที่แล้ว
 	return $result;
