@@ -90,7 +90,7 @@ function fnRemoveEscapeString(mixed $string): mixed
 		return array_map('fnRemoveEscapeString', $string);
 	} else {
 		// ถ้า $string เป็นสตริง ลบแท็ก HTML, ช่องว่าง และเพิ่ม escape character
-		return addslashes(trim(strip_tags($string)));
+		return addslashes(trim(strip_tags((string) $string)));
 	}
 }
 
@@ -212,6 +212,8 @@ function fnConvertDataToArr(string $data): array
 
 function TheBooGeyManEncodeIdx($string, $key = 'mynameispond')
 {
+	$string = (string) $string;
+	$key = (string) $key;
 	$j = 0;
 	$hash = null;
 	$key = sha1($key);
@@ -230,6 +232,8 @@ function TheBooGeyManEncodeIdx($string, $key = 'mynameispond')
 }
 function TheBooGeyManDecodeIdx($string, $key = 'mynameispond')
 {
+	$string = (string) $string;
+	$key = (string) $key;
 	$j = 0;
 	$hash = null;
 	$key = sha1($key);
@@ -588,7 +592,9 @@ function fnWriteLogFile(string $text = '', ?string $path = null, ?string $file =
 	$dateTime = date('Y-m-d H:i:s');
 
 	// กำหนด URL เต็มของ request
-	$fullUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . "://{$_SERVER['HTTP_HOST']}{$_SERVER['REQUEST_URI']}";
+	$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+	$uri = $_SERVER['REQUEST_URI'] ?? '';
+	$fullUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . "://{$host}{$uri}";
 
 	// ดึง IP address ของ client โดยใช้ฟังก์ชัน fnGetClientIp()
 	$userIp = fnGetClientIp();
@@ -650,7 +656,7 @@ function fnGetClientIp(): string
 
 	// ถ้าไม่มี header 'HTTP_CF_CONNECTING_IP' หรือ 'HTTP_X_FORWARDED_FOR'
 	// แสดงว่า client เชื่อมต่อโดยตรง (ไม่ผ่าน proxy หรือ Cloudflare)
-	return $_SERVER['REMOTE_ADDR'];
+	return $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
 	// คืนค่า IP address จาก 'REMOTE_ADDR'
 }
 
